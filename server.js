@@ -54,6 +54,12 @@ function get_that_boat(boatID){                                                 
     });
 }
 
+function patch_boat(id, name, type, length){                                                  //edit boat
+    const key = datastore.key([BOAT, parseInt(id,10)]);
+    const updated_boat = {"name": name, "type": type, "length": length};
+    return datastore.save({"key":key, "data":updated_boat}).then(() => {return key});
+}
+
 function put_boat(id, name, description, price){
     const key = datastore.key([boat, parseInt(id,10)]);
     const boat = {"name": name, "description": description, "price": price};
@@ -108,6 +114,27 @@ router.post('/', function(req, res){
   // else{
   //   res.status(400).send({ Error: "The request object is missing at least one of the required attributes"});
   // }
+});
+
+router.patch('/:id', function(req, res){                                        //patch boat
+  if(req.get('content-type') !== 'application/json'){
+      res.status(415).send(Error: "Server only accepts application/json data.");
+  }
+  else{
+    const boat = get_that_boat(req.params.id)
+  	.then( (boat) => {
+        if(boat != null){
+          console(req);
+          patch_boat(req.params.id, req.body.name, req.body.type, req.body.length)
+          .then( key => {
+            res.status(200).send('{ "id": ' + key.id + ', "name": "' + req.body.name + '", "type": "' + req.body.type + '", "length": ' + req.body.length + ', "self": "' + "https://hw3-datastore-liuqib.appspot.com/boats/" + key.id +'"}')
+          });
+        }
+        else{
+          res.status(404).send({ Error: "No boat with this boat_id exists"});
+        }
+      });
+  }
 });
 
 router.delete('/', function (req, res){
